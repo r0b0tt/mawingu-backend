@@ -1,21 +1,6 @@
 const express = require('express');
-const Sequelize = require('sequelize');
-
 const app = express();
 
-const sequelize = new Sequelize('mawingu_wifi', 'root', '', {
-    host: 'localhost',
-    dialect: 'mysql',
-    define: {
-        timestamps: false
-    }
-});
-
-var personnel = sequelize.import(__dirname + "/models/personnel.js");
-
-sequelize.sync({ force: false }).then(() => {
-    console.log("sync is completed")
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

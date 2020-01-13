@@ -1,39 +1,42 @@
 const express = require('express');
+const config = require('../utils/config');
 const tasks_router = express.Router();
+const jwt = require('jsonwebtoken');
+const db = require("../db");
 
-const Sequelize = require('sequelize');
-const sequelize = new Sequelize('mawingu_wifi', 'root', '', {
-    host: 'localhost',
-    dialect: 'mysql',
-    define: {
-        timestamps: false
-    }
-});
+// Import the task model
+var tasks = db.import("../models/task.js");
 
 
-var tasks = sequelize.import("../models/task.js");
-
+// Get assigned tasks
 tasks_router.get("/assigned", (req, res) => {
+    let jwt_token = req.headers.authorization.split(" ")[1];
+    jwt.verify(jwt_token, config.secret, (err, decoded) => {
+        if (err) {
+            res.json({ error: "Invalid token!" })
+        } else {
+            let page = req.query.page;
+            let limit = req.query.limit;
+            let order = req.query.order;
+            let orderMethod = req.query.orderMethod;
 
-    let page = req.query.page;
-    let limit = req.query.limit;
-    let order = req.query.order;
-    let orderMethod = req.query.orderMethod;
+            tasks.findAll({
+                order: [[
+                    order === undefined ? "created" : order, orderMethod === undefined ? "DESC" : orderMethod
+                ]],
+            })
+                .then(tasks => {
+                    let tasks_assigned = tasks;
+                    if (page !== undefined && limit !== undefined) {
+                        let end_index = parseInt(page) * parseInt(limit);
+                        let start_index = end_index - parseInt(limit);
+                        tasks_assigned = tasks.slice(start_index, end_index);
+                    }
+                    return res.json(tasks_assigned);
 
-    tasks.findAll({
-        order: [[order, orderMethod]],
-    })
-        .then(tasks => {
-            let tasks_assigned = tasks;
-            if (page !== undefined && limit !== undefined) {
-                let end_index = parseInt(page) * parseInt(limit);
-                let start_index = end_index - parseInt(limit);
-                tasks_assigned = tasks.slice(start_index, end_index);
-            }
-            return res.json(tasks_assigned);
-
-
-        });
+                });
+        }
+    });
 
 })
 
