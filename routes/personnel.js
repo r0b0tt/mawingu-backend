@@ -51,7 +51,8 @@ personnel_router.post("/login", (req, res) => {
         res.status(200).json({
             token: jwtToken,
             expires_in: "24h",
-            reset_password: getUser.reset_password
+            reset_password: getUser.reset_password,
+            fname: getUser.personnel_fname
         })
     }).catch(err => {
         return res.status(401).json({
